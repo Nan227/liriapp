@@ -1,0 +1,26 @@
+{
+  "name": "liriapp",
+  "version": "1.0.0",
+  "description": "This is a liri.app. It will connect with three APIs",
+  "main": "liri.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nan227/liriapp.git"
+  },
+  "keywords": [],
+  "author": "Nan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nan227/liriapp/issues"
+  },
+  "homepage": "https://github.com/Nan227/liriapp#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "dotenv": "^6.2.0",
+    "moment": "^2.23.0",
+    "node-spotify-api": "^1.0.7"
+  }
+}
