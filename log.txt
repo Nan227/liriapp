@@ -1,0 +1,4 @@
+doWhatItSays retrieved spotify-this-song, undefined 
+doWhatItSays retrieved "I Want it That Way", undefined 
+doWhatItSays retrieved spotify-this-song, undefined 
+doWhatItSays retrieved "I Want it That Way", undefined 

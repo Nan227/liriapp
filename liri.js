@@ -9,6 +9,10 @@ var axios = require("axios");
 var moment = require("moment");
 var fs = require('fs');
 
+var logger = fs.createWriteStream('log.txt', {
+  flags: 'a' // 'a' means appending (old data will be preserved)
+})
+
 
 App(process.argv[2], process.argv[3]);
 
@@ -82,39 +86,20 @@ function getSpotifySong(inputs) {
 	        }
           // check all data comeback
           //  console.log(data);
-	        var songInfo = data.tracks.items;
-	        console.log("Artist(s): " + songInfo[0].artists[0].name);
-	        console.log("Song Name: " + songInfo[0].name);
-	        console.log("Preview Link: " + songInfo[0].preview_url);
-	        console.log("Album: " + songInfo[0].album.name);
+
+          var songInfo = data.tracks.items;
+          
+          for (let i = 0; i < songInfo.length; i++) {
+            
+            console.log("--------------------------------------");
+            console.log("Artist(s): " + songInfo[i].artists[0].name);
+            console.log("The song name's : " + songInfo[i].name);
+            console.log("Preview Link: " + songInfo[i].preview_url);
+            console.log("Album: " + songInfo[i].album.name);
+            
+          }
 	});
 }
-
-function followFileCommand() {
-	fs.readFile('random.txt', "utf8", function(error, data){
-
-		if (error) {
-    		return console.log(error);
-  		}
-
-		// Then split it by commas (to make it more readable)
-		var dataArr = data.split(",");
-
-		// Each command is represented. Because of the format in the txt file, remove the quotes to run these commands. 
-		if (dataArr[0] === "spotify-this-song") {
-			var songcheck = dataArr[1].slice(1, -1);
-			spotify(songcheck);
-		} else if (dataArr[0] === "concert-this") {
-			var myband = dataArr[1].slice(1, -1);
-			concert(myband);
-		} else if(dataArr[0] === "movie-this") {
-			var movie_name = dataArr[1].slice(1, -1);
-			movie(movie_name);
-		} 
-		
-  	});
-
-};
 
 function getMovie(){
 
@@ -141,7 +126,7 @@ function getMovie(){
       console.log("Actors: " + response.data.Actors);
 
     }
-
+// If it error, it will show a movie name "Mr. Nobody"
   ).catch(function(error) {
     console.log("------------------------------------");
     console.log("You did not input movie name on "
@@ -153,5 +138,28 @@ function getMovie(){
   
   });
   
-
 }
+
+function followFileCommand() {
+	fs.readFile("random.txt", "utf8", function(error, data){
+
+		if (error) {
+    		return console.log(error);
+  		}
+
+		// Then split it by commas (to make it more readable)
+		var dataArr = data.split(",");
+    // Each command is represented. Because of the format in the txt file, remove the quotes to run these commands. 
+    for (i = 0; i < dataArr.length; i ++){
+      var readFile = dataArr[i];
+      var insideFile = dataArr[i+2];
+     
+      App(readFile, insideFile);
+
+      // (readFile === "spotify-this-song") ? getSpotifySong(insideFile) : (readFile === "movie-this") ? getMovie(insideFile) : (readFile === "concert-this") ? (getMyBand(insideFile)) : (console.log("Error, no more data"))
+      
+
+      logger.write("doWhatItSays retrieved " + readFile + ", " + insideFile +" \n");
+     }
+    }	
+  )};

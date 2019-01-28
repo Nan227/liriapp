@@ -17,7 +17,7 @@ LIRI is a _Language_ Interpretation and Recognition Interface. LIRI will be a co
    * [DotEnv](https://www.npmjs.com/package/dotenv)
    
 # Screen capture
-![](liriapp.png)
+<img src = "./img/liriapp.png">
  
 # Github project
 
