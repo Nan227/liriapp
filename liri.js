@@ -1,23 +1,27 @@
 require("dotenv").config();
+
 var keys = require("./keys.js");
-var spotify = new Spotify(keys.spotify);
+var request = require("request");
+
 var Spotify = require("node-spotify-api");
+
 var axios = require("axios");
-var moment = require("monemt");
-var spotify = new Spotify(keys.spotify);
+var moment = require("moment");
+var fs = require('fs');
+
 
 App(process.argv[2], process.argv[3]);
 
 function App(command, parameter) {
   switch (command) {
-    case "my-band":
-      getMyBand(parameter);
+    case "concert-this":
+      getMyBand();
       break;
     case "spotify-this-song":
       getSpotifySong(parameter);
       break;
     case "movie-this":
-      getMovie(parameter);
+      getMovie();
       break;
     case "do-what-it-says":
       followFileCommand();
@@ -26,157 +30,128 @@ function App(command, parameter) {
       console.log("Liri does not know that command. Please try again.");
   }
 }
-// ------------------------------------------
-//Grab data from keys.js
-var keys = require('./keys.js');
-var request = require('request');
-var twitter = require('twitter');
-var spotify = require('spotify');
-var client = new twitter(keys.twitterKeys);
-var fs = require('fs');
 
-//Stored argument's array
-var nodeArgv = process.argv;
-var command = process.argv[2];
-//movie or song
-var x = "";
-//attaches multiple word arguments
-for (var i=3; i<nodeArgv.length; i++){
-  if(i>3 && i<nodeArgv.length){
-    x = x + "+" + nodeArgv[i];
-  } else{
-    x = x + nodeArgv[i];
-  }
-}
+function getMyBand(){
 
-//switch case
-switch(command){
-  case "my-tweets":
-    showTweets();
-  break;
+  var band = process.argv[3];
+  
+  // Then run a request with axios to the band API with the band specified
 
-  case "spotify-this-song":
-    if(x){
-      spotifySong(x);
-    } else{
-      spotifySong("Fluorescent Adolescent");
+  // borrow Alex to get it safe environment. I will change it after I learn Herokuapp.com
+  var queryUrl = "https://alex-rosencors.herokuapp.com/?url=https://rest.bandsintown.com/artists/" + band + "/events?app_id=e1ba7c7a-44d1-4d3e-a299-176f4592a8c3";
+
+  //  check if it works
+  // console.log(queryUrl);
+  
+  axios.get(queryUrl).then(
+    function(response) {
+      // checking if it work
+        //console.log(response.data);
+      // var data = response.data.venue;
+      for (i = 0; i < 5; i++) {
+
+    console.log("--------------------------------------");
+      console.log("-> Name of the venue: " + response.data[i].venue.name);
+      console.log("   Venue location: " +  response.data[i].venue.city +" "+ response.data[i].venue.country);
+
+      var time = response.data[i].datetime;
+      var converttime = moment(time).format('MMMM DD YYYY');
+      console.log("   Date of the Event: "+ converttime);
+      console.log("--------------------------------------");
     }
-  break;
-
-  case "movie-this":
-    if(x){
-      omdbData(x)
-    } else{
-      omdbData("Mr. Nobody")
-    }
-  break;
-
-  case "do-what-it-says":
-    doThing();
-  break;
-
-  default:
-    console.log("{Please enter a command: my-tweets, spotify-this-song, movie-this, do-what-it-says}");
-  break;
-}
-
-function showTweets(){
-  //Display last 20 Tweets
-  var screenName = {screen_name: 'stefanieding'};
-  client.get('statuses/user_timeline', screenName, function(error, tweets, response){
-    if(!error){
-      for(var i = 0; i<tweets.length; i++){
-        var date = tweets[i].created_at;
-        console.log("@StefanieDing: " + tweets[i].text + " Created At: " + date.substring(0, 19));
-        console.log("-----------------------");
-        
-        //adds text to log.txt file
-        fs.appendFile('log.txt', "@StefanieDing: " + tweets[i].text + " Created At: " + date.substring(0, 19));
-        fs.appendFile('log.txt', "-----------------------");
-      }
-    }else{
-      console.log('Error occurred');
-    }
+   }
+  ).catch(function(error) {
+    console.log("------------------------------------");
+    console.log("You did not input a name of band on "
+    + error);
+    
   });
+  
 }
 
-function spotifySong(song){
-  spotify.search({ type: 'track', query: song}, function(error, data){
-    if(!error){
-      for(var i = 0; i < data.tracks.items.length; i++){
-        var songData = data.tracks.items[i];
-        //artist
-        console.log("Artist: " + songData.artists[0].name);
-        //song name
-        console.log("Song: " + songData.name);
-        //spotify preview link
-        console.log("Preview URL: " + songData.preview_url);
-        //album name
-        console.log("Album: " + songData.album.name);
-        console.log("-----------------------");
-        
-        //adds text to log.txt
-        fs.appendFile('log.txt', songData.artists[0].name);
-        fs.appendFile('log.txt', songData.name);
-        fs.appendFile('log.txt', songData.preview_url);
-        fs.appendFile('log.txt', songData.album.name);
-        fs.appendFile('log.txt', "-----------------------");
-      }
-    } else{
-      console.log('Error occurred.');
-    }
-  });
+function getSpotifySong(inputs) {
+
+  var spotify = new Spotify(keys.spotify);
+		if (!inputs){
+        	inputs = 'The Sign';
+    	}
+		spotify.search({ type: 'track', query: inputs }, function(err, data) {
+			if (err){
+	            console.log('Error occurred: ' + err);
+	            return;
+	        }
+          // check all data comeback
+          //  console.log(data);
+	        var songInfo = data.tracks.items;
+	        console.log("Artist(s): " + songInfo[0].artists[0].name);
+	        console.log("Song Name: " + songInfo[0].name);
+	        console.log("Preview Link: " + songInfo[0].preview_url);
+	        console.log("Album: " + songInfo[0].album.name);
+	});
 }
 
-function omdbData(movie){
-  var omdbURL = 'http://www.omdbapi.com/?t=' + movie + '&plot=short&tomatoes=true';
+function followFileCommand() {
+	fs.readFile('random.txt', "utf8", function(error, data){
 
-  request(omdbURL, function (error, response, body){
-    if(!error && response.statusCode == 200){
-      var body = JSON.parse(body);
+		if (error) {
+    		return console.log(error);
+  		}
 
-      console.log("Title: " + body.Title);
-      console.log("Release Year: " + body.Year);
-      console.log("IMdB Rating: " + body.imdbRating);
-      console.log("Country: " + body.Country);
-      console.log("Language: " + body.Language);
-      console.log("Plot: " + body.Plot);
-      console.log("Actors: " + body.Actors);
-      console.log("Rotten Tomatoes Rating: " + body.tomatoRating);
-      console.log("Rotten Tomatoes URL: " + body.tomatoURL);
+		// Then split it by commas (to make it more readable)
+		var dataArr = data.split(",");
 
-      //adds text to log.txt
-      fs.appendFile('log.txt', "Title: " + body.Title);
-      fs.appendFile('log.txt', "Release Year: " + body.Year);
-      fs.appendFile('log.txt', "IMdB Rating: " + body.imdbRating);
-      fs.appendFile('log.txt', "Country: " + body.Country);
-      fs.appendFile('log.txt', "Language: " + body.Language);
-      fs.appendFile('log.txt', "Plot: " + body.Plot);
-      fs.appendFile('log.txt', "Actors: " + body.Actors);
-      fs.appendFile('log.txt', "Rotten Tomatoes Rating: " + body.tomatoRating);
-      fs.appendFile('log.txt', "Rotten Tomatoes URL: " + body.tomatoURL);
+		// Each command is represented. Because of the format in the txt file, remove the quotes to run these commands. 
+		if (dataArr[0] === "spotify-this-song") {
+			var songcheck = dataArr[1].slice(1, -1);
+			spotify(songcheck);
+		} else if (dataArr[0] === "concert-this") {
+			var myband = dataArr[1].slice(1, -1);
+			concert(myband);
+		} else if(dataArr[0] === "movie-this") {
+			var movie_name = dataArr[1].slice(1, -1);
+			movie(movie_name);
+		} 
+		
+  	});
 
-    } else{
-      console.log('Error occurred.')
+};
+
+function getMovie(){
+
+  // Grab the movieName which will always be the third node argument.
+  var movie = process.argv[3];
+  
+  // Then run a request with axios to the OMDB API with the movie specified
+  var queryUrl = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=trilogy";
+  
+  //  check if work 
+  // console.log(queryUrl);
+
+  axios.get(queryUrl).then(
+    function(response) {
+      // checking if it work
+      //console.log(response.data);
+      console.log("Title: " + response.data.Title);
+      console.log("Year: " + response.data.Year);
+      console.log("IMDB Rating: " + response.data.imdbRating);
+      console.log("Rotten Tomatoes Rating: "+ response.data.Ratings[1].Value);
+      console.log("Country: " + response.data.Country);
+      console.log("Language: " + response.data.Language);
+      console.log("Plot: " + response.data.Plot);
+      console.log("Actors: " + response.data.Actors);
+
     }
-    if(movie === "Mr. Nobody"){
-      console.log("-----------------------");
-      console.log("If you haven't watched 'Mr. Nobody,' then you should: http://www.imdb.com/title/tt0485947/");
-      console.log("It's on Netflix!");
 
-      //adds text to log.txt
-      fs.appendFile('log.txt', "-----------------------");
-      fs.appendFile('log.txt', "If you haven't watched 'Mr. Nobody,' then you should: http://www.imdb.com/title/tt0485947/");
-      fs.appendFile('log.txt', "It's on Netflix!");
-    }
+  ).catch(function(error) {
+    console.log("------------------------------------");
+    console.log("You did not input movie name on "
+    + error);
+    console.log("------------------------------------");
+    console.log("If you haven't watched 'Mr. Nobody,' then you should check this link : http://www.imdb.com/title/tt0485947/");
+    console.log("It's on Netflix!")
+     //adds text to log.txt
+  
   });
+  
 
-}
-
-function doThing(){
-  fs.readFile('random.txt', "utf8", function(error, data){
-    var txt = data.split(',');
-
-    spotifySong(txt[1]);
-  });
 }
